@@ -1,7 +1,7 @@
 const router = require("express").Router();
 const bcrypt = require("bcryptjs");
 const Users = require("../users/users-model.js");
-const uuid = require("uuid");
+// const uuid = require("uuid");
 
 const activeSessions = [];
 
@@ -23,14 +23,17 @@ router.post("/login", (req, res) => {
 		.then(user => {
 			console.log("found", user);
 			if (user && bcrypt.compareSync(req.body.password, user.password)) {
-				const sessionId = uuid();
-				activeSessions.push(sessionId);
+				// const sessionId = uuid();
+				// activeSessions.push(sessionId);
 
-				res.cookie("sessionId", sessionId, { maxAge: 900000 });
-				res.status(200).json({ message: "Welcome" });
+				// res.cookie("sessionId", sessionId, { maxAge: 900000 });
+
+				req.session.loggedInUser = user;
+
+				res.status(200).json({ message: "Logged in" });
 			} else {
 				res.status(200).json({
-					message: "Username not found or wrong password"
+					message: "You shall not pass!"
 				});
 			}
 		})
@@ -40,10 +43,11 @@ router.post("/login", (req, res) => {
 });
 
 function protected(req, res, next) {
-	if (activeSessions.includes(req.cookies.sessionId)) {
+	if (req.session.loggedInUser) {
+		// if (activeSessions.includes(req.cookies.sessionId)) {
 		next();
 	} else {
-		res.status(401).json({ message: "Not valid" });
+		res.status(401).json({ message: "You shall not pass!" });
 	}
 }
 
